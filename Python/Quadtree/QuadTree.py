@@ -141,11 +141,11 @@ class QuadTree(object):
             elif self.location == 3:
                 self.neighbour[0] = self.parent.children[1]
                 self.neighbour[1] = self.parent.neighbour[1][-1] if self.parent.neighbour[1] else None
-                self.neighbour[2] = self.parent.neighbour[2][1] if self.parent.neighbour[2] else None
+                self.neighbour[2] = self.parent.neighbour[2][0] if self.parent.neighbour[2] else None
                 self.neighbour[3] = self.parent.children[3]
 
             else:
                 self.neighbour[0] = self.parent.children[0]
                 self.neighbour[1] = self.parent.children[2]
                 self.neighbour[2] = self.parent.neighbour[2][-1] if self.parent.neighbour[2] else None
-                self.neighbour[3] = self.parent.neighbour[3][1] if self.parent.neighbour[3] else None
+                self.neighbour[3] = self.parent.neighbour[3][0] if self.parent.neighbour[3] else None
