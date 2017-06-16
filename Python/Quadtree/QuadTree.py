@@ -9,7 +9,9 @@ class QuadTree(object):
         '''
         check if meshed already, if not:
         start meshing using BFS, criteria (Node -> Bool) is the function to decide if a node needs subdivision
-        during BFS + smoothing, adjacent leaves depth difference <= 1, the one ready to subdivide always has smaller depth
+        during BFS + smoothing, adjacent leaves depth difference <= 1, the one ready to subdivide always has smaller (or equal) depth
+
+        later we can use DFS to assign node number
         '''
         if self.Root.children == [None, None, None, None]:
             self.Root.subdivide()
@@ -37,31 +39,26 @@ class QuadTree(object):
         def __init__(self, parent, rect, location):
             '''
             initialize a node in a quadtree with the following property:
-            rect: coordinate of four corners
+            rect: corner of rectangle to decide the location of the Node
             location = 1, 2, 3, 4 indicatin topleft, topright, bottomright, bottomleft, None if is root
 
             following properties must be set after __init__ called:
-                neighbour: [[], [], [], []]: top, right, bottom, left, each contains either one or two leaf reference
+                neighbour: [up, right, bottom, left] neighbours in each direction, can either be None or [Node] or [Node, Node]
             '''
 
             self.parent = parent
-            self.children = [None, None, None, None]
+            self.rect = rect     
             self.location = location
+            self.children = [None, None, None, None]  # initial children list, actual children is decided by calling subdivide (only branch and root have children)
 
             if parent == None:
-                self.depth = 0
-            else:
-                self.depth = parent.depth + 1
-            self.rect = rect
-
-            if self.parent == None:
                 self.type = "Root"
+                self.depth = 0
+                self.neighbour = [None, None, None, None]  # configure its neighbour for root only
             else:
                 self.type = "Leaf"
-
-            # configure its neighbour and nodenum for root only
-            if self.type = "Root":
-                self.neighbour = [None, None, None, None]
+                self.depth = parent.depth + 1
+                
 
         def subdivide(self):
             self.type = "Branch"
@@ -71,8 +68,7 @@ class QuadTree(object):
                 if self.neighbour[n].depth == self.depth - 1:
                     self.neighbour[n].subdivide()
 
-            # actual subdivide the Node
-
+            # actual code to subdivide the Node
             x0, z0, x1, z1 = self.rect
             h = (x1 - x0) / 2
 
@@ -86,29 +82,35 @@ class QuadTree(object):
                 self.children[n] = Node(self, rects[n], n + 1)
 
             # change neighbours' neighbour (point to self) to self.children
-            if self.neighbour[0]:
-                if len(self.neighbour[0].neighbour[2] == 1):
-                    self.neighbour[0].neighbour[2] = [self.children[0]]
-                else:
-                    pass
-
-            if self.neighbour[1]:
-                if len(self.neighbour[1].neighbour[3] == 1):
-                    pass
-                else:
-                    pass
-
-            if self.neighbour[2]:
-                if len(self.neighbour[2].neighbour[0] == 1):
-                    pass
-                else:
-                    pass
-
-            if self.neighbour[3]:
-                if len(self.neighbour[3].neighbour[1] == 1):
-                    pass
-                else:
-                    pass
+            for idx, val in enumerate(self.neighbour):
+                if idx == 0:  # top
+                    if val:
+                        if len(val) == 1:
+                            self.neighbour[idx][0].neighbour[2] = [self.children[1], self.children[0]]
+                        else:
+                            self.neighbour[idx][0].neighbour[2] = [self.children[0]]
+                            self.neighbour[idx][1].neighbour[2] = [self.children[1]]
+                elif idx == 1:  # right
+                    if val:
+                        if len(val) == 1:
+                            self.neighbour[idx][0].neighbour[3] = [self.children[2], self.children[1]]
+                        else:
+                            self.neighbour[idx][0].neighbour[3] = [self.children[1]]
+                            self.neighbour[idx][1].neighbour[3] = [self.children[2]]
+                elif idx == 2:  # bottom
+                    if val:
+                        if len(val) == 1:
+                            self.neighbour[idx][0].neighbour[0] = [self.children[3], self.children[2]]
+                        else:
+                            self.neighbour[idx][0].neighbour[0] = [self.children[2]]
+                            self.neighbour[idx][1].neighbour[0] = [self.children[3]]
+                else:  # left
+                    if val:
+                        if len(val) == 1:
+                            self.neighbour[idx][0].neighbour[1] = [self.children[0], self.children[3]]
+                        else:
+                            self.neighbour[idx][0].neighbour[1] = [self.children[3]]
+                            self.neighbour[idx][1].neighbour[1] = [self.children[0]]
 
             # assign children's neighbour
             for n in xrange(4):
@@ -120,16 +122,28 @@ class QuadTree(object):
             '''
 
             # neighbour property:
-            self.neighbour = []  # initialization
+            self.neighbour = [[], [], [], []]  # initialization
 
             if self.location == 1:
-                pass
+                self.neighbour[0] = self.parent.neighbour[0][0] if self.parent.neighbour[0] else None
+                self.neighbour[1] = self.parent.children[1]
+                self.neighbour[2] = self.parent.children[3]
+                self.neighbour[3] = self.parent.neighbour[3][-1] if self.parent.neighbour[3] else None
 
             elif self.location == 2:
-                pass
+                self.neighbour[0] = self.parent.neighbour[0][-1] if self.parent.neighbour[0] else None
+                self.neighbour[1] = self.parent.neighbour[1][0] if self.parent.neighbour[1] else None
+                self.neighbour[2] = self.parent.children[2]
+                self.neighbour[3] = self.parent.children[0]
 
             elif self.location == 3:
-                pass
+                self.neighbour[0] = self.parent.children[1]
+                self.neighbour[1] = self.parent.neighbour[1][-1] if self.parent.neighbour[1] else None
+                self.neighbour[2] = self.parent.neighbour[2][1] if self.parent.neighbour[2] else None
+                self.neighbour[3] = self.parent.children[3]
 
             else:
-                pass
+                self.neighbour[0] = self.parent.children[0]
+                self.neighbour[1] = self.parent.children[2]
+                self.neighbour[2] = self.parent.neighbour[2][-1] if self.parent.neighbour[2] else None
+                self.neighbour[3] = self.parent.neighbour[3][1] if self.parent.neighbour[3] else None
