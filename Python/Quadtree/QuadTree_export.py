@@ -3,11 +3,13 @@ class QuadTree(object):
         self.Root = Node(None, rect, None)
 
     def mesh(self, criteria):
-        if self.Root.children == [None, None, None, None]:
+        if self.isMeshed:
+            print("ready meshed")
+        else:
             self.Root.subdivide()
             currentDepth = self.Root.children
 
-            while currentDepth:
+            while not None in currentDepth:
                 nextDepth = []
 
                 for currentNode in currentDepth:
@@ -18,9 +20,9 @@ class QuadTree(object):
                             currentNode.subdivide()
                             nextDepth += currentNode.children
                 
-                thislevel = nextDepth
-        else:
-            print("Already meshed")
+                currentDepth = nextDepth
+
+            self.isMeshed = True
 
     class Node(object):
         def __init__(self, parent, rect, location):

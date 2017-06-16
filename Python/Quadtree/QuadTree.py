@@ -4,21 +4,23 @@ class QuadTree(object):
 
     def __init__(self, rect):
         self.Root = Node(None, rect, None)
+        self.isMeshed = False
 
     def mesh(self, criteria):
         '''
-        check if meshed already, if not:
         start meshing using BFS, criteria (Node -> Bool) is the function to decide if a node needs subdivision
         during BFS + smoothing, adjacent leaves depth difference <= 1, the one ready to subdivide always has smaller (or equal) depth
 
         later we can use DFS to assign node number
         '''
-        if self.Root.children == [None, None, None, None]:
+        if self.isMeshed:
+            print("ready meshed")  # check if meshed already
+        else:
             self.Root.subdivide()
             currentDepth = self.Root.children
 
-            while currentDepth:
-                nextDepth = []
+            while not None in currentDepth:
+                nextDepth = []  # form a list (deque is better) to store next leve nodes
 
                 for currentNode in currentDepth:
                     if currentNode.type == Branch:
@@ -28,9 +30,9 @@ class QuadTree(object):
                             currentNode.subdivide()
                             nextDepth += currentNode.children
                 
-                thislevel = nextDepth
-        else:
-            print("Already meshed")
+                currentDepth = nextDepth
+
+            self.isMeshed = True
 
 
     # inner class Node represent one node, its properties is subject to BFS
