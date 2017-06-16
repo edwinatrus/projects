@@ -11,7 +11,6 @@ class QuadTree(object):
 
             while not None in currentDepth:
                 nextDepth = []
-
                 for currentNode in currentDepth:
                     if currentNode.type == Branch:
                         nextDepth += currentNode.children
@@ -19,9 +18,7 @@ class QuadTree(object):
                         if (criteria(currentNode)):
                             currentNode.subdivide()
                             nextDepth += currentNode.children
-                
                 currentDepth = nextDepth
-
             self.isMeshed = True
 
     class Node(object):
